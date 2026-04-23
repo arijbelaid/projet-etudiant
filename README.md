@@ -60,7 +60,7 @@ Cette capture montre l'organisation des dossiers du projet Spring Boot :
 * `src/main/resources/` : fichiers de configuration
 * `pom.xml` : dépendances Maven
 
-![Structure](screenshot/structure_projet_partie1 .png)
+![Structure](screenshot/structure_projet_partie1.png)
 
 ---
 
