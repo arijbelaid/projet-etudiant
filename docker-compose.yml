@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15
@@ -17,7 +15,7 @@ services:
     build: ./api-spring-boot/api_etudiant
     container_name: etudiant_api
     ports:
-      - "8080:8080"
+      - "8085:8080"
     depends_on:
       - db
     environment:

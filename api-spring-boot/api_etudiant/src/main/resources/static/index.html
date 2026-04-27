@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Étudiants</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #667eea;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #667eea;
+        }
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: red;
+            background-color: #ffe0e0;
+            border-radius: 10px;
+        }
+        .age-badge {
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .refresh-btn {
+            display: block;
+            margin: 20px auto 0;
+            padding: 10px 20px;
+            background-color: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .refresh-btn:hover {
+            background-color: #5a67d8;
+        }
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📚 Liste des Étudiants</h1>
+
+    <div id="content">
+        <div class="loading">⏳ Chargement des étudiants...</div>
+    </div>
+
+    <button class="refresh-btn" onclick="loadEtudiants()">🔄 Rafraîchir</button>
+</div>
+
+<script>
+    async function loadEtudiants() {
+        const contentDiv = document.getElementById('content');
+        contentDiv.innerHTML = '<div class="loading">⏳ Chargement...</div>';
+
+        try {
+            const response = await fetch('/api/etudiants');
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const etudiants = await response.json();
+            displayEtudiants(etudiants);
+        } catch (error) {
+            contentDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Erreur: ${error.message}<br>
+                        Vérifiez que l'API Spring Boot est bien démarrée sur http://localhost:8080
+                    </div>
+                `;
+        }
+    }
+
+    function displayEtudiants(etudiants) {
+        const contentDiv = document.getElementById('content');
+
+        if (!etudiants || etudiants.length === 0) {
+            contentDiv.innerHTML = '<div class="error">📭 Aucun étudiant trouvé</div>';
+            return;
+        }
+
+        let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>CIN</th>
+                            <th>Nom complet</th>
+                            <th>Date de naissance</th>
+                            <th>Âge</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+        etudiants.forEach(etudiant => {
+            const age = calculateAge(etudiant.dateNaissance);
+            html += `
+                    <tr>
+                        <td>${etudiant.id}</td>
+                        <td>${etudiant.cin}</td>
+                        <td><strong>${etudiant.nom}</strong></td>
+                        <td>${formatDate(etudiant.dateNaissance)}</td>
+                        <td><span class="age-badge">${age} ans</span></td>
+                    </tr>
+                `;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+                <div class="stats">
+                    📊 Total des étudiants: <strong>${etudiants.length}</strong>
+                </div>
+            `;
+
+        contentDiv.innerHTML = html;
+    }
+
+    function calculateAge(dateNaissance) {
+        const birthDate = new Date(dateNaissance);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('fr-FR');
+    }
+
+    // Charger les étudiants au chargement de la page
+    loadEtudiants();
+
+    // Rafraîchir toutes les 30 secondes
+    setInterval(loadEtudiants, 30000);
+</script>
+</body>
+</html>
