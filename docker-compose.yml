@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:15
-    container_name: etudiant_db
+    container_name: etudiant_postgres
     environment:
       POSTGRES_DB: etudiantdb
       POSTGRES_USER: postgres
@@ -10,21 +10,84 @@ services:
       - "5432:5432"
     networks:
       - app-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
-  api:
-    build: ./api-spring-boot/api_etudiant
-    container_name: etudiant_api
+  redis:
+    image: redis:7-alpine
+    container_name: etudiant_redis
     ports:
-      - "8085:8080"
+      - "6379:6379"
+    networks:
+      - app-network
+
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - app-network
+
+  etudiant-service:
+    build: ./api-spring-boot/api_etudiant
+    container_name: etudiant-service
+    ports:
+      - "8081:8081"
     depends_on:
       - db
+      - redis
+      - eureka-server
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/etudiantdb
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+    networks:
+      - app-network
+
+  grading-service:
+    build: ./grading-service
+    container_name: grading-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - db
+      - eureka-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/etudiantdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+    networks:
+      - app-network
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api-gateway
     networks:
       - app-network
 
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

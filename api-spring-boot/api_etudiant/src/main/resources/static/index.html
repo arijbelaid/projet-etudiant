@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion des Étudiants</title>
+    <title>Gestion des Étudiants et Départements</title>
     <style>
         * {
             margin: 0;
@@ -17,22 +17,38 @@
             padding: 20px;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
+        }
+        .card {
             background: white;
             border-radius: 15px;
             padding: 25px;
+            margin-bottom: 30px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-        h1 {
-            text-align: center;
+        h1, h2 {
             color: #333;
             margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+            padding-left: 15px;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .flex-row {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        .flex-col {
+            flex: 1;
+            min-width: 300px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 15px;
         }
         th, td {
             padding: 12px;
@@ -45,6 +61,48 @@
         }
         tr:hover {
             background-color: #f5f5f5;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 5px;
+            margin-top: 5px;
+        }
+        button:hover {
+            background-color: #5a67d8;
+        }
+        .btn-danger {
+            background-color: #e53e3e;
+        }
+        .btn-danger:hover {
+            background-color: #c53030;
+        }
+        .btn-warning {
+            background-color: #ed8936;
+        }
+        .btn-warning:hover {
+            background-color: #dd6b20;
         }
         .loading {
             text-align: center;
@@ -59,29 +117,6 @@
             background-color: #ffe0e0;
             border-radius: 10px;
         }
-        .age-badge {
-            background-color: #4CAF50;
-            color: white;
-            border-radius: 20px;
-            padding: 5px 12px;
-            font-size: 12px;
-            font-weight: bold;
-            display: inline-block;
-        }
-        .refresh-btn {
-            display: block;
-            margin: 20px auto 0;
-            padding: 10px 20px;
-            background-color: #667eea;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .refresh-btn:hover {
-            background-color: #5a67d8;
-        }
         .stats {
             margin-top: 20px;
             padding: 15px;
@@ -89,111 +124,377 @@
             border-radius: 10px;
             text-align: center;
         }
+        .edit-form {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+        .inline-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        hr {
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>📚 Liste des Étudiants</h1>
+    <!-- Gestion des Étudiants -->
+    <div class="card">
+        <h1>📚 Gestion des Étudiants</h1>
+        <div class="flex-row">
+            <!-- Formulaire d'ajout -->
+            <div class="flex-col">
+                <h2>➕ Ajouter un étudiant</h2>
+                <form id="addStudentForm">
+                    <div class="form-group">
+                        <label>CIN *</label>
+                        <input type="text" id="cin" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nom complet *</label>
+                        <input type="text" id="nom" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Date de naissance *</label>
+                        <input type="date" id="dateNaissance" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Année d'inscription *</label>
+                        <input type="number" id="annee" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Département *</label>
+                        <select id="departementId"></select>
+                    </div>
+                    <button type="submit">Ajouter l'étudiant</button>
+                </form>
+            </div>
 
-    <div id="content">
-        <div class="loading">⏳ Chargement des étudiants...</div>
+            <!-- Liste des étudiants -->
+            <div class="flex-col">
+                <h2>📋 Liste des étudiants</h2>
+                <div id="studentsList">Chargement...</div>
+            </div>
+        </div>
     </div>
 
-    <button class="refresh-btn" onclick="loadEtudiants()">🔄 Rafraîchir</button>
+    <!-- Gestion des Départements -->
+    <div class="card">
+        <h2>🏛️ Gestion des Départements</h2>
+        <div class="flex-row">
+            <div class="flex-col">
+                <h3>➕ Ajouter un département</h3>
+                <form id="addDeptForm">
+                    <div class="form-group">
+                        <label>Nom du département *</label>
+                        <input type="text" id="deptNom" required>
+                    </div>
+                    <button type="submit">Ajouter département</button>
+                </form>
+            </div>
+            <div class="flex-col">
+                <h3>📋 Liste des départements</h3>
+                <div id="deptsList">Chargement...</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    async function loadEtudiants() {
-        const contentDiv = document.getElementById('content');
-        contentDiv.innerHTML = '<div class="loading">⏳ Chargement...</div>';
+    // Configuration de l'API (adapter si besoin)
+    const API_BASE = '/api';  // proxy ou adresse complète
 
+    // Récupération des départements pour les sélecteurs
+    async function loadDepartementsForSelect() {
         try {
-            const response = await fetch('/api/etudiants');
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const etudiants = await response.json();
-            displayEtudiants(etudiants);
+            const response = await fetch(`${API_BASE}/departements`);
+            if (!response.ok) throw new Error('Erreur chargement départements');
+            const depts = await response.json();
+            const select = document.getElementById('departementId');
+            select.innerHTML = '';
+            depts.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept.id;
+                option.textContent = `${dept.nom} (ID: ${dept.id})`;
+                select.appendChild(option);
+            });
+            return depts;
         } catch (error) {
-            contentDiv.innerHTML = `
-                    <div class="error">
-                        ❌ Erreur: ${error.message}<br>
-                        Vérifiez que l'API Spring Boot est bien démarrée sur http://localhost:8080
-                    </div>
-                `;
+            console.error(error);
+            return [];
         }
     }
 
-    function displayEtudiants(etudiants) {
-        const contentDiv = document.getElementById('content');
-
-        if (!etudiants || etudiants.length === 0) {
-            contentDiv.innerHTML = '<div class="error">📭 Aucun étudiant trouvé</div>';
-            return;
+    // Afficher la liste des étudiants
+    async function loadStudents() {
+        const container = document.getElementById('studentsList');
+        container.innerHTML = '<div class="loading">⏳ Chargement des étudiants...</div>';
+        try {
+            const response = await fetch(`${API_BASE}/etudiants`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const students = await response.json();
+            if (!students.length) {
+                container.innerHTML = '<div class="error">📭 Aucun étudiant trouvé</div>';
+                return;
+            }
+            let html = `<table>
+                <thead>
+                    <tr><th>ID</th><th>CIN</th><th>Nom</th><th>Date naissance</th><th>Âge</th><th>Email</th><th>Département</th><th>Actions</th></tr>
+                </thead>
+                <tbody>`;
+            students.forEach(s => {
+                const age = calculateAge(s.dateNaissance);
+                html += `<tr>
+                    <td>${s.id}</td>
+                    <td>${escapeHtml(s.cin)}</td>
+                    <td>${escapeHtml(s.nom)}</td>
+                    <td>${formatDate(s.dateNaissance)}</td>
+                    <td>${age}</td>
+                    <td>${escapeHtml(s.email || '')}</td>
+                    <td>${escapeHtml(s.departementNom || 'Non assigné')}</td>
+                    <td class="inline-buttons">
+                        <button class="btn-warning" onclick="showEditStudent(${s.id})">✏️</button>
+                        <button class="btn-danger" onclick="deleteStudent(${s.id})">🗑️</button>
+                    </td>
+                </tr>
+                <tr id="editRow-${s.id}" style="display:none;">
+                    <td colspan="8">
+                        <div class="edit-form" id="editForm-${s.id}">
+                            <h4>Modifier l'étudiant</h4>
+                            <div class="flex-row">
+                                <div class="flex-col"><label>CIN</label><input type="text" id="edit-cin-${s.id}" value="${escapeHtml(s.cin)}"></div>
+                                <div class="flex-col"><label>Nom</label><input type="text" id="edit-nom-${s.id}" value="${escapeHtml(s.nom)}"></div>
+                                <div class="flex-col"><label>Date naissance</label><input type="date" id="edit-date-${s.id}" value="${s.dateNaissance}"></div>
+                                <div class="flex-col"><label>Email</label><input type="email" id="edit-email-${s.id}" value="${escapeHtml(s.email || '')}"></div>
+                                <div class="flex-col"><label>Année inscription</label><input type="number" id="edit-annee-${s.id}" value="${s.anneePremiereInscription || ''}"></div>
+                                <div class="flex-col"><label>Département</label><select id="edit-dept-${s.id}"></select></div>
+                            </div>
+                            <button onclick="updateStudent(${s.id})">Enregistrer</button>
+                            <button onclick="hideEditStudent(${s.id})">Annuler</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            html += `</tbody></table><div class="stats">📊 Total: ${students.length} étudiant(s)</div>`;
+            container.innerHTML = html;
+            // Remplir les sélecteurs de modification pour chaque étudiant
+            const depts = await loadDepartementsForSelect();
+            for (let s of students) {
+                const select = document.getElementById(`edit-dept-${s.id}`);
+                if (select) {
+                    select.innerHTML = '';
+                    depts.forEach(dept => {
+                        const opt = document.createElement('option');
+                        opt.value = dept.id;
+                        opt.textContent = dept.nom;
+                        if (s.departementId === dept.id || (s.departement && s.departement.id === dept.id)) opt.selected = true;
+                        select.appendChild(opt);
+                    });
+                }
+            }
+        } catch (error) {
+            container.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
         }
-
-        let html = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>CIN</th>
-                            <th>Nom complet</th>
-                            <th>Date de naissance</th>
-                            <th>Âge</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
-        etudiants.forEach(etudiant => {
-            const age = calculateAge(etudiant.dateNaissance);
-            html += `
-                    <tr>
-                        <td>${etudiant.id}</td>
-                        <td>${etudiant.cin}</td>
-                        <td><strong>${etudiant.nom}</strong></td>
-                        <td>${formatDate(etudiant.dateNaissance)}</td>
-                        <td><span class="age-badge">${age} ans</span></td>
-                    </tr>
-                `;
-        });
-
-        html += `
-                    </tbody>
-                </table>
-                <div class="stats">
-                    📊 Total des étudiants: <strong>${etudiants.length}</strong>
-                </div>
-            `;
-
-        contentDiv.innerHTML = html;
     }
 
+    // Afficher la liste des départements
+    async function loadDepartements() {
+        const container = document.getElementById('deptsList');
+        container.innerHTML = '<div class="loading">⏳ Chargement...</div>';
+        try {
+            const response = await fetch(`${API_BASE}/departements`);
+            if (!response.ok) throw new Error('Erreur chargement');
+            const depts = await response.json();
+            if (!depts.length) {
+                container.innerHTML = '<div>Aucun département</div>';
+                return;
+            }
+            let html = `<table><thead><tr><th>ID</th><th>Nom</th><th>Actions</th></tr></thead><tbody>`;
+            depts.forEach(d => {
+                html += `<tr>
+                    <td>${d.id}</td>
+                    <td><span id="dept-name-${d.id}">${escapeHtml(d.nom)}</span></td>
+                    <td>
+                        <button class="btn-warning" onclick="editDepartement(${d.id})">✏️</button>
+                        <button class="btn-danger" onclick="deleteDepartement(${d.id})">🗑️</button>
+                    </td>
+                </tr>`;
+            });
+            html += `</tbody></table><div class="stats">📊 Total: ${depts.length} département(s)</div>`;
+            container.innerHTML = html;
+        } catch (error) {
+            container.innerHTML = `<div class="error">❌ ${error.message}</div>`;
+        }
+    }
+
+    // --- Opérations CRUD étudiant ---
+    document.getElementById('addStudentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newStudent = {
+            cin: document.getElementById('cin').value,
+            nom: document.getElementById('nom').value,
+            dateNaissance: document.getElementById('dateNaissance').value,
+            email: document.getElementById('email').value,
+            anneePremiereInscription: parseInt(document.getElementById('annee').value),
+            departement: { id: parseInt(document.getElementById('departementId').value) }
+        };
+        try {
+            const response = await fetch(`${API_BASE}/etudiants`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newStudent)
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            alert('Étudiant ajouté !');
+            document.getElementById('addStudentForm').reset();
+            loadStudents(); // rafraîchir
+            loadDepartementsForSelect(); // rafraîchir sélecteurs
+        } catch (err) {
+            alert('Erreur : ' + err.message);
+        }
+    });
+
+    window.showEditStudent = function(id) {
+        const row = document.getElementById(`editRow-${id}`);
+        if (row.style.display === 'none' || row.style.display === '') {
+            row.style.display = 'table-row';
+        } else {
+            row.style.display = 'none';
+        }
+    };
+    window.hideEditStudent = function(id) {
+        document.getElementById(`editRow-${id}`).style.display = 'none';
+    };
+    window.updateStudent = async function(id) {
+        const updated = {
+            cin: document.getElementById(`edit-cin-${id}`).value,
+            nom: document.getElementById(`edit-nom-${id}`).value,
+            dateNaissance: document.getElementById(`edit-date-${id}`).value,
+            email: document.getElementById(`edit-email-${id}`).value,
+            anneePremiereInscription: parseInt(document.getElementById(`edit-annee-${id}`).value),
+            departement: { id: parseInt(document.getElementById(`edit-dept-${id}`).value) }
+        };
+        try {
+            const response = await fetch(`${API_BASE}/etudiants/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updated)
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            alert('Étudiant modifié !');
+            hideEditStudent(id);
+            loadStudents();
+        } catch (err) {
+            alert('Erreur : ' + err.message);
+        }
+    };
+    window.deleteStudent = async function(id) {
+        if (!confirm('Supprimer définitivement cet étudiant ?')) return;
+        try {
+            const response = await fetch(`${API_BASE}/etudiants/${id}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            alert('Étudiant supprimé');
+            loadStudents();
+        } catch (err) {
+            alert('Erreur : ' + err.message);
+        }
+    };
+
+    // --- Opérations CRUD département ---
+    document.getElementById('addDeptForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nom = document.getElementById('deptNom').value;
+        try {
+            const response = await fetch(`${API_BASE}/departements`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nom })
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            alert('Département ajouté !');
+            document.getElementById('deptNom').value = '';
+            loadDepartements();
+            loadDepartementsForSelect();
+            loadStudents(); // pour mettre à jour le nom du département dans la liste
+        } catch (err) {
+            alert('Erreur : ' + err.message);
+        }
+    });
+
+    window.editDepartement = async function(id) {
+        const newName = prompt('Nouveau nom du département :');
+        if (!newName) return;
+        try {
+            const response = await fetch(`${API_BASE}/departements/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nom: newName })
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            alert('Département modifié');
+            loadDepartements();
+            loadDepartementsForSelect();
+            loadStudents();
+        } catch (err) {
+            alert('Erreur : ' + err.message);
+        }
+    };
+
+    window.deleteDepartement = async function(id) {
+        if (!confirm('Supprimer ce département ? Tous les étudiants associés deviendront sans département (clé étrangère null).')) return;
+        try {
+            const response = await fetch(`${API_BASE}/departements/${id}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            alert('Département supprimé');
+            loadDepartements();
+            loadDepartementsForSelect();
+            loadStudents();
+        } catch (err) {
+            alert('Erreur : ' + err.message);
+        }
+    };
+
+    // Utilitaires
     function calculateAge(dateNaissance) {
-        const birthDate = new Date(dateNaissance);
+        if (!dateNaissance) return '?';
+        const birth = new Date(dateNaissance);
         const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const monthDiff = today.getMonth() - birthDate.getMonth();
-
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
+        let age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
         return age;
     }
-
     function formatDate(dateString) {
+        if (!dateString) return '';
         const date = new Date(dateString);
         return date.toLocaleDateString('fr-FR');
     }
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
 
-    // Charger les étudiants au chargement de la page
-    loadEtudiants();
-
-    // Rafraîchir toutes les 30 secondes
-    setInterval(loadEtudiants, 30000);
+    // Initialisation
+    window.onload = () => {
+        loadDepartementsForSelect();
+        loadStudents();
+        loadDepartements();
+    };
 </script>
 </body>
 </html>
