@@ -374,125 +374,82 @@ Fonctionnalités :
 🔽 Interface avec DropdownButton
 ---
 
-### Partie 4 – Qualité, tests, intégration et authentification (récapitulatif)
 
-🎯 Objectif
-Mettre en place une stratégie de test complète (unitaire, intégration, E2E, stress) sur le micro service étudiant, intégrer les résultats de test à Jira via Xray, relier GitHub à Jira, et ajouter un micro service d’authentification (Express + MongoDB + JWT).
+# 🚀 Partie 4 – Qualité, tests, intégration et authentification
 
-✅ Q1 – Branche Git version-4 et Sprint 4 Jira
-Création de la branche version-4 à partir de version-3
+---
 
-Création d’un Sprint 4 dans Jira regroupant les user stories associées aux tests, à l’intégration et à l’auth
+## 🎯 Objectif
 
-✅ Q2 – Stratégie de test complète sur etudiant-service (couverture ≥ 80 %)
-Type de test	Outils	Niveau visé
-Unitaire	JUnit 5 + Mockito	Méthodes Service (logique métier)
-Intégration	Testcontainers (PostgreSQL)	Persistance JPA
-E2E	Cypress (sur frontend Next.js)	Parcours utilisateur complet
-Stress	Gatling	Performance de l’API sous charge
-Couverture	JaCoCo (seuil 80 % lignes)	Build Maven échoue si couverture < 80 %
-Les tests d’intégration utilisent Testcontainers (PostgreSQL réel dans un conteneur Docker)
+Mettre en place une stratégie de test complète (**unitaire, intégration, E2E, stress**) sur le micro service étudiant, intégrer les résultats de test à Jira via **Xray**, relier **GitHub à Jira**, et ajouter un micro service d’authentification (**Express + MongoDB + JWT**).
 
-Les tests de stress simulent 50 utilisateurs concurrents sur 30 secondes
+---
 
-JaCoCo bloque le build si la couverture ligne est inférieure à 80 %
+## ✅ Q1 – Branche Git version-4 et Sprint 4 Jira
 
-✅ Q3 – Testcontainers pour PostgreSQL (intégré à Q2)
-Dépendances testcontainers-junit-jupiter et postgresql ajoutées
+- Création de la branche `version-4` à partir de `version-3`
+- Création d’un **Sprint 4 dans Jira** regroupant :
+  - Tests
+  - Intégration
+  - Authentification
 
-Configuration via @Testcontainers + @DynamicPropertySource
+---
 
-✅ Q4 – Intégration GitHub ↔ Jira
-Installation de l’application GitHub for Jira dans Jira Cloud
+## ✅ Q2 – Stratégie de test complète (couverture ≥ 80 %)
 
-Conventions à respecter :
+| Type de test | Outils                      | Niveau visé                      |
+|-------------|----------------------------|----------------------------------|
+| Unitaire    | JUnit 5 + Mockito          | Logique métier (Service)         |
+| Intégration | Testcontainers (PostgreSQL)| Persistance JPA                  |
+| E2E         | Cypress (Next.js)          | Parcours utilisateur complet     |
+| Stress      | Gatling                    | Performance sous charge          |
+| Couverture  | JaCoCo (≥ 80 %)            | Build échoue si seuil non atteint|
 
-Branches : feature/GDE-XX-description
+---
 
-Commits : GDE-XX : message
+### 🔎 Détails
 
-PR : titre contenant la clé du ticket
+- Tests d’intégration avec **PostgreSQL réel via Testcontainers**
+- Tests de stress : **50 utilisateurs / 30 secondes**
+- **JaCoCo bloque le build** si couverture < 80 %
 
-Jira lie automatiquement les commits, branches et PRs au ticket correspondant
+---
 
-✅ Q5 – Intégration Xray pour la gestion des cas de test
-Installation du plugin Xray dans Jira
+## ✅  – Testcontainers PostgreSQL
 
-Création d’un Test dans Jira pour chaque méthode de test importante
+- Dépendances ajoutées :
+  - `testcontainers-junit-jupiter`
+  - `postgresql`
 
-Regroupement des tests du Sprint 4 dans un Test Plan
+- Configuration :
 
-Publication automatique des résultats JUnit via GitHub Actions (test-and-report.yml) vers l’API REST de Xray
+```java
+@Testcontainers
+@DynamicPropertySource
 
-✅ Q6 – Micro service d’authentification (Express + MongoDB + JWT)
-Service auth-service avec Node.js / Express
 
-Base de données MongoDB (conteneur dédié)
+#### 🔸 Pull Requests
 
-Endpoints :
+- Le titre doit contenir la clé Jira
 
-POST /auth/register – inscription (hachage bcrypt)
+👉 Jira lie automatiquement :
+- commits  
+- branches  
+- PRs  
 
-POST /auth/login – retourne un token JWT
+---
 
-Intégration dans docker-compose.yml (ports, dépendances, variables d’environnement)
+## ✅ – Intégration Xray (tests)
 
-✅ Mise à jour de docker-compose.yml
-Ajout des services :
+- Installation du plugin **Xray** dans Jira  
+- Création d’un **Test** pour chaque cas important  
+- Regroupement des tests dans un **Test Plan (Sprint 4)**  
 
-Service	Port exposé	Dépend de
-mongodb	27017	–
-auth-service	3001	mongodb
-Réseau commun app-network utilisé par tous les services
+---
 
-Volumes persistants pour PostgreSQL (postgres_data) et MongoDB (mongodb_data)
+### ⚙️ CI/CD
 
-📦 Structure du dépôt (Partie 4)
-text
-projet-etudiants/
-├── api-spring-boot/           # Micro service étudiant (tests inclus)
-│   └── src/test/java/...      # Tests unitaires + intégration
-│   └── src/gatling/...        # Simulations Gatling
-├── auth-service/              # Micro service d’authentification
-│   ├── app.js
-│   ├── models/User.js
-│   ├── routes/auth.js
-│   ├── .env
-│   └── Dockerfile
-├── frontend/
-│   └── cypress/e2e/           # Tests E2E Cypress
-├── .github/
-│   ├── workflows/
-│   │   └── test-and-report.yml   # CI avec publication Xray
-│   ├── ISSUE_TEMPLATE/
-│   │   └── bug_report.md
-│   └── pull_request_template.md
-└── docker-compose.yml          # Service mongodb + auth-service ajoutés
-🚀 Lancement et validation
-bash
-# Lancer toute l’architecture
-docker compose up --build -d
+Publication automatique des résultats JUnit via :
 
-# Exécuter les tests (unitaires + intégration + stress)
-cd api-spring-boot/api_etudiant
-mvn clean verify
-
-# Exécuter les tests E2E (frontend)
-cd ../../
-cd frontend
-npx cypress run
-
-# Tester l’authentification
-curl -X POST http://localhost:3001/auth/register -H "Content-Type: application/json" -d '{"username":"test","password":"123"}'
-curl -X POST http://localhost:3001/auth/login -H "Content-Type: application/json" -d '{"username":"test","password":"123"}'
-✅ Conclusion
-La couverture de code atteint ≥ 80 % (JaCoCo)
-
-Les tests sont automatisés et intégrés à la CI
-
-GitHub et Jira sont synchronisés (branches, commits, PRs)
-
-Les résultats de tests sont remontés dans Jira via Xray
-
-Un service d’authentification complet (JWT) est opérationnel
-
+```bash
+.github/workflows/test-and-report.yml
