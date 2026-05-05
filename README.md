@@ -207,3 +207,171 @@ Toutes les fonctionnalités de la Partie 2 ont été implémentées et testées 
 - ✅ CRUD complet
 - ✅ Gestion des erreurs
 - ✅ Organisation Agile avec Jira
+
+# 🚀 Partie 3 – Architecture Microservices
+
+## 📌 Description
+
+Cette partie fait évoluer l’application vers une **architecture microservices complète**.
+
+Le système est désormais composé de plusieurs services indépendants qui communiquent entre eux via :
+
+- 🔍 **Eureka** (Service Discovery)
+- 🔗 **OpenFeign** (communication inter-services)
+
+Une **API Gateway** centralise tous les appels clients, tandis qu’un nouveau microservice de gestion des notes est introduit.
+
+L’écosystème est complété par :
+
+- 🌐 Un **frontend Next.js**
+- 📱 Une **application mobile Flutter enrichie**
+
+L’ensemble est orchestré avec **Docker Compose** pour un déploiement simple et rapide.
+
+---
+
+## 🛠️ Technologies utilisées
+
+- Java 17+
+- Spring Boot
+- Spring Cloud (Eureka, OpenFeign, Gateway)
+- PostgreSQL
+- Redis
+- Docker & Docker Compose
+- Next.js (React)
+- Flutter
+- Tailwind CSS
+- Swagger / OpenAPI
+- Jira (Scrum)
+
+---
+
+## 🧱 Architecture globale
+
+| Service             | Port | Rôle                         |
+|--------------------|------|------------------------------|
+| eureka-server      | 8761 | Découverte de services       |
+| etudiant-service   | 8081 | Gestion des étudiants        |
+| grading-service    | 8082 | Gestion des notes            |
+| api-gateway        | 8080 | Point d’entrée unique        |
+| frontend (Next.js) | 3000 | Interface web                |
+| postgres           | 5432 | Base de données              |
+| redis              | 6379 | Cache                        |
+
+---
+
+## 🚀 Fonctionnalités principales
+
+### 🔍 Service Discovery (Eureka)
+
+Tous les microservices s’enregistrent automatiquement auprès du serveur Eureka.
+
+---
+
+### 🔗 Communication inter-services (Feign)
+
+Le `grading-service` communique avec `etudiant-service` afin de vérifier l’existence d’un étudiant avant l’ajout d’une note.
+
+---
+
+### 🚪 API Gateway
+
+Tous les clients (web, mobile) passent uniquement par :
+http://localhost:8080
+
+---
+
+### 📝 Microservice des notes (grading-service)
+
+- CRUD complet des notes
+- Validation des données
+- Documentation Swagger intégrée
+
+---
+
+### 🌐 Frontend Next.js
+
+Interface moderne permettant :
+
+- Gestion des étudiants
+- Gestion des départements
+
+---
+
+### 📱 Application mobile Flutter
+
+Fonctionnalités ajoutées :
+
+- Récupération des départements
+- Sélection via `DropdownButton`
+- Filtrage des étudiants par département
+
+---
+
+## 🧾 API – Microservice des notes
+
+| Méthode | Endpoint           | Description            |
+|--------|--------------------|------------------------|
+| GET    | `/api/notes`       | Liste des notes        |
+| GET    | `/api/notes/{id}`  | Détail d’une note      |
+| POST   | `/api/notes`       | Ajouter une note       |
+| PUT    | `/api/notes/{id}`  | Modifier une note      |
+| DELETE | `/api/notes/{id}`  | Supprimer une note     |
+
+---
+
+## 🧩 Modèle de données – Note
+
+- `id` : Long (auto-généré)
+- `studentId` : Long
+- `matiere` : String
+- `valeur` : Double (0–20)
+
+---
+
+## 🔗 Exemple Feign Client
+
+```java
+@FeignClient(name = "etudiant-service")
+public interface EtudiantClient {
+
+    @GetMapping("/api/etudiants/{id}")
+    EtudiantDTO getEtudiantById(@PathVariable Long id);
+}
+
+---
+## 🚪Configuration API Gateway
+
+---
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: etudiant-service
+          uri: lb://etudiant-service
+          predicates:
+            - Path=/api/etudiants/**,/api/departements/**
+
+        - id: grading-service
+          uri: lb://grading-service
+          predicates:
+            - Path=/api/notes/**
+---
+🌐 Frontend Next.js
+📄 Pages disponibles
+/etudiants → CRUD des étudiants
+/etudiants/[id] → Détail / modification
+/departements → Gestion des départements
+
+---
+📱 Application mobile (Flutter)
+
+Fonctionnalités :
+
+📥 Récupération des départements
+🎯 Filtrage des étudiants
+🔽 Interface avec DropdownButton
+
+
+
