@@ -1,4 +1,5 @@
 services:
+  # ==================== BASES DE DONNÉES ====================
   db:
     image: postgres:15
     container_name: etudiant_postgres
@@ -21,6 +22,17 @@ services:
     networks:
       - app-network
 
+  mongodb:
+    image: mongo:7
+    container_name: auth_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app-network
+
+  # ==================== SERVICE DISCOVERY (EUREKA) ====================
   eureka-server:
     build: ./eureka-server
     container_name: eureka-server
@@ -29,6 +41,7 @@ services:
     networks:
       - app-network
 
+  # ==================== MICROSERVICES ====================
   etudiant-service:
     build: ./api-spring-boot/api_etudiant
     container_name: etudiant-service
@@ -62,6 +75,7 @@ services:
     networks:
       - app-network
 
+  # ==================== API GATEWAY ====================
   api-gateway:
     build: ./api-gateway
     container_name: api-gateway
@@ -74,6 +88,7 @@ services:
     networks:
       - app-network
 
+  # ==================== FRONTEND NEXT.JS ====================
   frontend:
     build: ./frontend
     container_name: frontend
@@ -84,10 +99,27 @@ services:
     networks:
       - app-network
 
+  # ==================== SERVICE D'AUTHENTIFICATION ====================
+  auth-service:
+    build: ./auth-service
+    container_name: auth_service
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mongodb
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/authdb
+      JWT_SECRET: super_secret_key_change_me_please
+      PORT: 3001
+    networks:
+      - app-network
+
+# ==================== RÉSEAU ====================
 networks:
   app-network:
     driver: bridge
 
+# ==================== VOLUMES PERSISTANTS ====================
 volumes:
   postgres_data:
-  redis_data:
+  mongodb_data:
